@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+langchain
+sentence-transformers
+transformers
+torch
+pydantic
+ollama
+scipy
+numpy
