@@ -90,17 +90,17 @@ async def chat(input: ChatInput):
     print(f'persona---{persona}')
 
     persona_description = PERSONAS[persona]
-    add_to_faiss('user123', input.message)
+    # add_to_faiss('user123', input.message)
 
-    user_history = retrieve_user_history(user_id="user123", query=input.message)
-    history_context = "\n".join(user_history[-3:])  # last 3 interactions
+    # user_history = retrieve_user_history(user_id="user123", query=input.message)
+    # history_context = "\n".join(user_history[-3:])  # last 3 interactions
 
     response_prompt = chat_prompt.format(
         persona_description=persona_description,
         message=input.message,
         response_style=PERSONA_RESPONSE_STYLE[persona],
-        length_guidance=length_guidance,
-        history=history_context
+        length_guidance=length_guidance
+        # history=history_context
     )
 
     response = llm.invoke(response_prompt)
