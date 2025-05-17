@@ -8,3 +8,7 @@ pydantic
 ollama
 scipy
 numpy
+httpx
+python-dotenv
+faiss-cpu 
+sentence-transformers
