@@ -1,4 +1,6 @@
 import json
+import faiss
+import numpy as np
 from datetime import datetime
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -6,12 +8,22 @@ from personas import PERSONAS
 from prompt_templates import chat_prompt
 from langchain.llms import Ollama
 from classify_prompt_template import classify_prompt
+from sentence_transformers import SentenceTransformer
+
 
 
 app = FastAPI()
 
 # Initialize LLM (You must have Ollama running and a model pulled, e.g., mistral)
 llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Initialize FAISS index (dimension must match embedding size)
+dimension = 384
+index = faiss.IndexFlatL2(dimension)
+
+# Metadata list to track messages per vector
+metadata = []
 
 class ChatInput(BaseModel):
     message: str
@@ -39,6 +51,23 @@ def detect_persona_rule_based(message: str):
         return "reserved"
     return "verbose"  # default fallback
 
+def add_to_faiss(user_id, message):
+    embedding = embedder.encode([message])[0]
+    index.add(np.array([embedding]))
+    metadata.append({"user_id": user_id, "text": message})
+
+def retrieve_user_history(user_id, query, top_k=4):
+    query_embedding = embedder.encode([query])[0]
+    distances, indices = index.search(np.array([query_embedding]), top_k)
+
+    # Filter by user_id
+    history = []
+    for idx in indices[0]:
+        if idx < len(metadata) and metadata[idx]["user_id"] == user_id:
+            history.append(metadata[idx]["text"])
+    return history
+
+
 
 PERSONA_RESPONSE_STYLE = {
     "oversharer": "Use gentle, validating language in 2-3 sentences.",
@@ -61,13 +90,17 @@ async def chat(input: ChatInput):
     print(f'persona---{persona}')
 
     persona_description = PERSONAS[persona]
+    add_to_faiss('user123', input.message)
 
+    user_history = retrieve_user_history(user_id="user123", query=input.message)
+    history_context = "\n".join(user_history[-3:])  # last 3 interactions
 
     response_prompt = chat_prompt.format(
         persona_description=persona_description,
         message=input.message,
         response_style=PERSONA_RESPONSE_STYLE[persona],
-        length_guidance=length_guidance
+        length_guidance=length_guidance,
+        history=history_context
     )
 
     response = llm.invoke(response_prompt)
