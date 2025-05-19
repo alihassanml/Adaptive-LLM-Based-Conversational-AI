@@ -9,10 +9,45 @@ from prompt_templates import chat_prompt
 from langchain.llms import Ollama
 from classify_prompt_template import classify_prompt
 from sentence_transformers import SentenceTransformer
+from fastapi.middleware.cors import CORSMiddleware
+import database.model as model
+from database.database import SessionLocal, engine
+from sqlalchemy.orm import Session
+from fastapi import FastAPI,Depends,HTTPException,Form
+import bcrypt
 
 
 
 app = FastAPI()
+model.Base.metadata.create_all(bind=engine)
+origins = [
+    'http://localhost:5173'
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+class Signup(BaseModel):
+    name:str
+    username: str
+    email: str
+    password: str
+
+
+
 
 # Initialize LLM (You must have Ollama running and a model pulled, e.g., mistral)
 llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
@@ -27,6 +62,51 @@ metadata = []
 
 class ChatInput(BaseModel):
     message: str
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
+@app.post('/Create')
+async def create_user(signup: Signup, db: Session = Depends(get_db)):
+    
+    user_name = db.query(model.Sginup).filter(model.Sginup.username == signup.username).first()
+    user_email = db.query(model.Sginup).filter(model.Sginup.email == signup.email).first()
+    if user_name:
+        raise HTTPException(status_code=400, detail="Username Must Be Unique!")
+    if user_email:
+        raise HTTPException(status_code=400, detail="email Must Be Unique!")
+    hashed_password = hash_password(signup.password)
+    new_user = model.Sginup(
+        name=signup.name,
+        username=signup.username,
+        email=signup.email,
+        password=hashed_password,
+    )
+    db.add(new_user)
+    db.commit()
+    return {'message': 'User created successfully', 'user': new_user}
+
+
+@app.post('/login/')
+async def login(
+            username: str = Form(..., title='Enter Your User Name'),
+            password: str = Form(..., title='Enter Password'),
+            db: Session = Depends(get_db)):
+    
+    user = db.query(model.Sginup).filter(model.Sginup.username == username).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    
+    if not verify_password(password, user.password):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        
+    return {"message": "Login successful"}
+
+
 
 
 def save_chat_log(persona, user_message, llm_reply):
@@ -111,3 +191,5 @@ async def chat(input: ChatInput):
         "persona_detected": persona,
         "response": response
     }
+
+

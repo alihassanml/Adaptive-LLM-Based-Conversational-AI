@@ -1,0 +1,14 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+html{
+    min-height: 100vh;
+}
+body{
+    background-color: white;
+    overflow-y: hidden;
+}
+.main-1{
+    background-color: green;
+}
