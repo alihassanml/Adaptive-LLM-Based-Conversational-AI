@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import  { useState, useRef, useEffect } from 'react';
 import { Button, Offcanvas, Form, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -53,7 +53,7 @@ function Home() {
         onHide={toggleCanvas}
         backdrop={false}
         scroll={true}
-        style={{ width: '300px' }}
+        style={{ width: '330px' }}
         className="border-end"
       >
         <Offcanvas.Header closeButton>
@@ -68,35 +68,55 @@ function Home() {
       <div
         className="flex-grow-1 d-flex flex-column"
         style={{
-          marginLeft: show ? '300px' : '0',
+          marginLeft: show ? '330px' : '0',
           transition: 'margin-left 0.3s ease',
           height: '100vh',
         }}
       >
         {/* Chat display area */}
         <div
-          className="flex-grow-1 overflow-auto p-3"
+          className="flex-grow-1 overflow-auto"
           style={{ backgroundColor: '#f8f9fa' }}
         >
+          <div className='main-2'>
+            <h3 className='main-heading'><b style={{fontSize:"20px"}}>Adaptive LLM Based </b><br />Conversational AI</h3>
+            <i className="fa-solid fa-ellipsis-vertical" style={{position:"fixed",right:'20px',top:'20px'}}></i>
+          </div>
           {!show && (
-            <Button onClick={toggleCanvas} variant="primary" className="mb-3">
-              Show Menu
-            </Button>
+            <Button onClick={toggleCanvas} variant="primary" className="mb-3" style={{position:"fixed",top:"20px",left:"10px"}}>
+              <i className="fa-solid fa-bars-staggered" ></i>
+            </Button> 
           )}
 
           {chat.map((msg, idx) => (
             <div
               key={idx}
-              className={`d-flex mb-3 ${msg.type === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
+              className={`d-flex mt-2 ms-2 me-2  mb-3 ${msg.type === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
             >
-              <Card
-                bg={msg.type === 'user' ? 'primary' : 'light'}
-                text={msg.type === 'user' ? 'white' : 'dark'}
-                className="p-2"
-                style={{ maxWidth: '75%' }}
-              >
-                <Card.Text className="mb-0">{msg.message}</Card.Text>
-              </Card>
+               <div className={`d-flex align-items-start ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className='main-4'>
+                  <img
+                    src={
+                      msg.type === 'user'
+                        ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOuxrvcNMfGLh73uKP1QqYpKoCB0JLXiBMvA&s'
+                        : './logo.png'
+                    }
+                    className='main-4'
+                    alt=""
+                  />
+                </div>
+
+                <Card
+                  bg={msg.type === 'user' ? 'black' : 'light'}
+                  text={msg.type === 'user' ? 'white' : 'dark'}
+                  className={`p-2 me-2 ms-2 main-5 ${msg.type === 'user' ? 'from-user' : 'from-bot'}`}
+                  style={{ maxWidth: '75%' }}
+                >
+                  <Card.Text className="mb-0">{msg.message}</Card.Text>
+                </Card>
+              </div>
+
+
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -108,8 +128,10 @@ function Home() {
             <Form.Group className="d-flex">
               <Form.Control
                 type="text"
+                style={{outline:"none",offset:"0"}}
                 value={input}
                 placeholder="Type a message..."
+                className='form-input'
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
