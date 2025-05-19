@@ -28,7 +28,10 @@ allow_origins=["http://localhost:3000"]
 
 
 # Initialize LLM (You must have Ollama running and a model pulled, e.g., mistral)
-llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
+
+# llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
+# llm = Ollama(model="llama3.2:latest")  # or "llama2", "vicuna", etc.
+llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Initialize FAISS index (dimension must match embedding size)
