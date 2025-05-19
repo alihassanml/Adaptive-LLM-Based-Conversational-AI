@@ -117,8 +117,8 @@ function Home() {
                   }
                 }}
               />
-              <Button type="submit" variant="success" className="ms-2">
-                Send
+              <Button type="submit" variant="success" className="ms-2"style={{transform:"rotate(-90deg)"}}>
+               <span style={{fontSize:"18px",fontWeight:"bold"}}>&#10139;</span>
               </Button>
             </Form.Group>
           </Form>

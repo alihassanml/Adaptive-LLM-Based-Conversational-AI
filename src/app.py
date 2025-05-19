@@ -83,7 +83,7 @@ def retrieve_user_history(user_id, query, top_k=4):
 
 
 PERSONA_RESPONSE_STYLE = {
-    "oversharer": "Use gentle, validating language in 2-3 sentences.",
+    "oversharer": "Calm, supportive tone. Avoid dramatic expressions. 2-3 natural sentences only.",
     "verbose": "Respond clearly in 1-2 full sentences.",
     "reserved": "Use short, minimal phrases. Max 10 words."
 }
