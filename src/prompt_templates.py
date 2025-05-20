@@ -1,18 +1,18 @@
 chat_prompt = """
 You are a chatbot adapted to the following personality traits:
-{persona_description},{length_guidance}
+{persona_description}, {length_guidance}
 
+Previous conversation:
+{history}
 
 User says: "{message}"
 
 Now reply in the style: {response_style}
 
-Respond in a natural tone, consistent with the personality.
-Only reply with the assistant's final message below. Do not include any explanation, greeting, or system instruction. Just respond as the assistant would.
-
+Instructions:
+- Respond in a natural tone, consistent with the personality.
+- Only reply with the assistant's final message below.
+- Do not include any explanation, greeting, or system instruction.
 """
 
-
-# Recent history:
-# {history}
-
+# - Include relevant emojis to make the response more expressive.

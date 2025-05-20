@@ -18,15 +18,14 @@ body{
 }
 .main-2{
     height: 70px;
-    background-color: rgb(241, 241, 241);
-    border-bottom: 1px solid rgb(224, 224, 224);
+    background-color: white;
+    border-bottom: 1px solid rgb(248, 248, 248);
     margin-bottom: 20px;
 }
 .main-heading{
     padding-top: 10px;
     padding-left: 20px;
     font-size: 14px;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 .main-4{
     width: 50px;
@@ -47,16 +46,16 @@ body{
 .main-5::before {
     content: '';
     position: absolute;
-    height: 13px;
-    width: 13px;
+    height: 10px;
+    width: 10px;
     transform: rotate(45deg);
-    right: -8px;
-    top: 15px;
+    right: -4px;
+    top: 20px;
     z-index: -1; /* Behind the element */
 }
 
 .from-user::before {
-  background-color: black;
+  background-color: #7678ee;
 }
 
 /* Diamond color for bot */
@@ -68,4 +67,39 @@ body{
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+}
+.canvas-main{
+    background-color: #6061c9 !important;
+    color: white !important;
+}
+.custom-accordion .accordion-item {
+  border-radius: 13px !important;
+  overflow: hidden;
+  margin-bottom: 10px; /* Optional: space between items */
+  border: 1px solid #dee2e6; /* Optional: consistent border */
+}
+
+.custom-accordion .accordion-header {
+  border-radius: 13px 13px 0 0 !important;
+  overflow: hidden;
+}
+
+.custom-accordion .accordion-body {
+  border-radius: 0 0 13px 13px !important;
+  max-height: 235px !important;
+  overflow-y: auto;
+
+}
+
+::-webkit-scrollbar {
+  width: 0px; /* Width of the scrollbar */
+}
+::-webkit-scrollbar-track {
+  background: transparent; /* Background color of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: white; /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Rounded corners */
+  border: 2px solid rgb(255, 255, 255); /* Space around the scrollbar thumb */
 }

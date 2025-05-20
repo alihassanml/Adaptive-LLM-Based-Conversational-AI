@@ -10,6 +10,7 @@ from langchain_community.llms import Ollama
 from classify_prompt_template import classify_prompt
 from sentence_transformers import SentenceTransformer
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 
 
@@ -31,30 +32,46 @@ allow_origins=["http://localhost:3000"]
 
 # llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="llama3.2:latest")  # or "llama2", "vicuna", etc.
-llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
+llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
+# llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
 
 # Initialize FAISS index (dimension must match embedding size)
-dimension = 384
-index = faiss.IndexFlatL2(dimension)
+
 
 # Metadata list to track messages per vector
-metadata = []
 
 class ChatInput(BaseModel):
     message: str
 
 
-def save_chat_log(persona, user_message, llm_reply):
+def save_chat_log(persona, user_message, llm_reply, user_id="user123"):
     log_entry = {
         "timestamp": datetime.now().isoformat(),
         "persona": persona,
+        "user_id": user_id,
         "user_message": user_message,
         "llm_reply": llm_reply
     }
     with open("chat_log.json", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
+
+def load_recent_history(user_id: str, limit: int = 8):
+    history = []
+    try:
+        with open("chat_log.json", "r") as f:
+            lines = f.readlines()
+            for line in reversed(lines):
+                entry = json.loads(line)
+                if entry.get("user_id", "user123") == user_id:
+                    user_msg = entry["user_message"]
+                    llm_reply = entry["llm_reply"]
+                    history.append(f"User: {user_msg}\nBot: {llm_reply}")
+                    if len(history) == limit:
+                        break
+    except FileNotFoundError:
+        pass
+    return list(reversed(history))  # newest last
 
 
 def detect_persona_rule_based(message: str):
@@ -67,28 +84,13 @@ def detect_persona_rule_based(message: str):
         return "reserved"
     return "verbose"  # default fallback
 
-def add_to_faiss(user_id, message):
-    embedding = embedder.encode([message])[0]
-    index.add(np.array([embedding]))
-    metadata.append({"user_id": user_id, "text": message})
-
-def retrieve_user_history(user_id, query, top_k=4):
-    query_embedding = embedder.encode([query])[0]
-    distances, indices = index.search(np.array([query_embedding]), top_k)
-
-    # Filter by user_id
-    history = []
-    for idx in indices[0]:
-        if idx < len(metadata) and metadata[idx]["user_id"] == user_id:
-            history.append(metadata[idx]["text"])
-    return history
 
 
 
 PERSONA_RESPONSE_STYLE = {
     "oversharer": "Calm, supportive tone. Avoid dramatic expressions. 2-3 natural sentences only.",
-    "verbose": "Respond clearly in 1-2 full sentences.",
-    "reserved": "Use short, minimal phrases. Max 10 words."
+    "verbose": "Respond clearly in 1-2 full sentences. Use emojis if they fit naturally.",
+    "reserved": "Use short, minimal phrases.Add only 1 emoji. Max 10 words."
 }
 
 length_guidance = {
@@ -96,6 +98,7 @@ length_guidance = {
     "medium": "Reply in 2-3 concise sentences.",
     "long": "Provide a thoughtful and supportive 4-5 sentence reply."
 }
+VALID_PERSONAS = {"verbose", "reserved", "oversharer"}
 
 
 @app.post("/chat")
@@ -104,19 +107,21 @@ async def chat(input: ChatInput):
     classification_prompt = classify_prompt.format(message=input.message)
     persona = llm.invoke(classification_prompt).strip().lower()
     print(f'persona---{persona}')
+    if persona not in VALID_PERSONAS:
+        persona = "oversharer"
 
     persona_description = PERSONAS[persona]
-    # add_to_faiss('user123', input.message)
 
-    # user_history = retrieve_user_history(user_id="user123", query=input.message)
-    # history_context = "\n".join(user_history[-3:])  # last 3 interactions
+    user_history = load_recent_history("user123", limit=4)
+    history_context = "\n".join(user_history)
+    print('Previous Histories::---',history_context)
 
     response_prompt = chat_prompt.format(
         persona_description=persona_description,
         message=input.message,
         response_style=PERSONA_RESPONSE_STYLE[persona],
-        length_guidance=length_guidance
-        # history=history_context
+        length_guidance=length_guidance,
+        history=history_context
     )
 
     response = llm.invoke(response_prompt)
@@ -127,3 +132,44 @@ async def chat(input: ChatInput):
         "persona_detected": persona,
         "response": response
     }
+
+
+
+@app.get("/chat/history")
+def get_chat_history(user_id: str = "user123", limit: int = 10):
+    history = []
+    try:
+        with open("chat_log.json", "r") as f:
+            lines = f.readlines()
+            for line in reversed(lines):
+                entry = json.loads(line)
+                if entry.get("user_id", "user123") == user_id:
+                    history.append({
+                        "timestamp": entry["timestamp"],
+                        "message": entry["user_message"],
+                        "response": entry["llm_reply"]
+                    })
+                    if len(history) >= limit:
+                        break
+    except FileNotFoundError:
+        return JSONResponse(content={"history": []})
+
+    return {"history": list(reversed(history))}  # most recent last
+
+
+from collections import Counter
+import json
+
+@app.get("/persona-counts")
+def get_persona_counts():
+    counts = Counter()
+    try:
+        with open("chat_log.json", "r") as f:
+            for line in f:
+                entry = json.loads(line)
+                persona = entry.get("persona")
+                if persona:
+                    counts[persona] += 1
+    except FileNotFoundError:
+        pass
+    return counts
