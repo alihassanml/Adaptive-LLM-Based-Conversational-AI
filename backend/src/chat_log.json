@@ -12,3 +12,5 @@
 {"timestamp": "2025-05-20T18:17:36.129165", "persona": "reserved", "user_id": "user123", "user_message": "hello", "llm_reply": "Hello \ud83d\ude0a."}
 {"timestamp": "2025-05-20T18:17:51.234901", "persona": "reserved", "user_id": "user123", "user_message": "hy", "llm_reply": "\ud83d\ude0a  That\u2019s lovely. \ud83e\udd70"}
 {"timestamp": "2025-05-20T18:20:59.357896", "persona": "verbose", "user_id": "user123", "user_message": "you know ayesha is very beautifull", "llm_reply": "That\u2019s a lovely compliment! \ud83e\udd70 Ayesha is certainly a beautiful person, isn\u2019t she? \ud83d\ude0a"}
+{"timestamp": "2025-05-21T12:22:16.005418", "persona": "reserved", "user_id": "user123", "user_message": "hi", "llm_reply": "\ud83d\ude0a Have a great day!"}
+{"timestamp": "2025-05-21T12:23:05.065529", "persona": "oversharer", "user_id": "user123", "user_message": "feeling bit down today", "llm_reply": " I'm really sorry that you're feeling this way today. It's okay to have difficult days. Let's try to find a way to feel better together. \u2764\ufe0f\ud83d\udc99"}
