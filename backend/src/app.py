@@ -18,7 +18,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or ["http://localhost:3000"] if you want to restrict
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,17 +28,12 @@ allow_origins=["http://localhost:3000"]
 
 
 
-# Initialize LLM (You must have Ollama running and a model pulled, e.g., mistral)
 
-# llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
+llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="llama3.2:latest")  # or "llama2", "vicuna", etc.
-llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
+# llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
 
-# Initialize FAISS index (dimension must match embedding size)
-
-
-# Metadata list to track messages per vector
 
 class ChatInput(BaseModel):
     message: str
@@ -149,8 +144,7 @@ def get_chat_history(user_id: str = "user123", limit: int = 10):
                         "message": entry["user_message"],
                         "response": entry["llm_reply"]
                     })
-                    if len(history) >= limit:
-                        break
+                   
     except FileNotFoundError:
         return JSONResponse(content={"history": []})
 
@@ -173,3 +167,4 @@ def get_persona_counts():
     except FileNotFoundError:
         pass
     return counts
+
