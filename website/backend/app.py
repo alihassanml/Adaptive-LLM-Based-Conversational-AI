@@ -10,11 +10,15 @@ from langchain_community.llms import Ollama
 from src.classify_prompt_template import classify_prompt
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import src.database.model as model
-from src.database.database import SessionLocal
 from sqlalchemy.orm import Session
 from fastapi import FastAPI,Depends,HTTPException,Form
 import bcrypt
+from src.database.database import SessionLocal
+import src.database.model as model
+from src.database.database import engine
+from src.database.model import Base  
+
+
 
 
 app = FastAPI()
@@ -26,8 +30,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-allow_origins=["http://localhost:3000"]
-
+allow_origins=["*"]
+Base.metadata.create_all(bind=engine)
 
 
 
@@ -54,6 +58,8 @@ class Signup(BaseModel):
     username: str
     email: str
     password: str
+
+CHAT_LOG = './src/chat_log.json'
 
 
 def hash_password(password: str) -> str:
@@ -108,14 +114,14 @@ def save_chat_log(persona, user_message, llm_reply, user_id="user123"):
         "user_message": user_message,
         "llm_reply": llm_reply
     }
-    with open("./src/chat_log.json", "a") as f:
+    with open(CHAT_LOG, "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
 
 def load_recent_history(user_id: str, limit: int = 8):
     history = []
     try:
-        with open("./src/chat_log.json", "r") as f:
+        with open(CHAT_LOG, "r") as f:
             lines = f.readlines()
             for line in reversed(lines):
                 entry = json.loads(line)
@@ -195,7 +201,7 @@ async def chat(input: ChatInput):
 def get_chat_history(user_id: str = "user123", limit: int = 10):
     history = []
     try:
-        with open("chat_log.json", "r") as f:
+        with open(CHAT_LOG, "r") as f:
             lines = f.readlines()
             for line in reversed(lines):
                 entry = json.loads(line)
@@ -219,7 +225,7 @@ import json
 def get_persona_counts():
     counts = Counter()
     try:
-        with open("chat_log.json", "r") as f:
+        with open(CHAT_LOG, "r") as f:
             for line in f:
                 entry = json.loads(line)
                 persona = entry.get("persona")

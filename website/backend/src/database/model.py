@@ -1,7 +1,9 @@
 from sqlalchemy import Boolean,Integer,Column,String,ForeignKey,Float,DateTime, Enum, Text,LargeBinary
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from database.database import Base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 class Signup(Base):
     __tablename__ = 'Signup'
