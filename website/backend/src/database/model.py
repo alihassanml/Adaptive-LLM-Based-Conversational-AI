@@ -3,8 +3,8 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database.database import Base
 
-class Sginup(Base):
-    __tablename__ = 'Sginup'
+class Signup(Base):
+    __tablename__ = 'Signup'
     id = Column(Integer,primary_key=True,index=True)
     name = Column(String)    
     username = Column(String,unique=True,index=True)

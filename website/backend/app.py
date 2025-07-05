@@ -4,14 +4,17 @@ import numpy as np
 from datetime import datetime
 from fastapi import FastAPI
 from pydantic import BaseModel
-from personas import PERSONAS
-from prompt_templates import chat_prompt
+from src.personas import PERSONAS
+from src.prompt_templates import chat_prompt
 from langchain_community.llms import Ollama
-from classify_prompt_template import classify_prompt
-from sentence_transformers import SentenceTransformer
+from src.classify_prompt_template import classify_prompt
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
+import src.database.model as model
+from src.database.database import SessionLocal
+from sqlalchemy.orm import Session
+from fastapi import FastAPI,Depends,HTTPException,Form
+import bcrypt
 
 
 app = FastAPI()
@@ -29,14 +32,72 @@ allow_origins=["http://localhost:3000"]
 
 
 
-llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
+# llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="llama3.2:latest")  # or "llama2", "vicuna", etc.
-# llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
+llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
 
 
 class ChatInput(BaseModel):
     message: str
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+class Signup(BaseModel):
+    name:str
+    username: str
+    email: str
+    password: str
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+@app.post('/Create')
+async def create_user(signup: Signup, db: Session = Depends(get_db)):
+    
+    user_name = db.query(model.Signup).filter(model.Signup.username == signup.username).first()
+    user_email = db.query(model.Signup).filter(model.Signup.email == signup.email).first()
+    if user_name:
+        raise HTTPException(status_code=400, detail="Username Must Be Unique!")
+    if user_email:
+        raise HTTPException(status_code=400, detail="email Must Be Unique!")
+    hashed_password = hash_password(signup.password)
+    new_user = model.Signup(
+        name=signup.name,
+        username=signup.username,
+        email=signup.email,
+        password=hashed_password,
+    )
+    db.add(new_user)
+    db.commit()
+    return {'message': 'User created successfully', 'user': new_user}
+
+
+@app.post('/login/')
+async def login(
+            username: str = Form(..., title='Enter Your User Name'),
+            password: str = Form(..., title='Enter Password'),
+            db: Session = Depends(get_db)):
+    
+    user = db.query(model.Signup).filter(model.Signup.username == username).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    
+    if not verify_password(password, user.password):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        
+    return {"message": "Login successful"}
+
 
 
 def save_chat_log(persona, user_message, llm_reply, user_id="user123"):
@@ -47,14 +108,14 @@ def save_chat_log(persona, user_message, llm_reply, user_id="user123"):
         "user_message": user_message,
         "llm_reply": llm_reply
     }
-    with open("chat_log.json", "a") as f:
+    with open("./src/chat_log.json", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
 
 def load_recent_history(user_id: str, limit: int = 8):
     history = []
     try:
-        with open("chat_log.json", "r") as f:
+        with open("./src/chat_log.json", "r") as f:
             lines = f.readlines()
             for line in reversed(lines):
                 entry = json.loads(line)
