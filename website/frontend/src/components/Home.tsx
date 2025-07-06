@@ -107,7 +107,7 @@ function Home() {
               style={{ height: '40px', width: '40px', borderRadius: '50%' }}
               alt=""
             />
-            <h5 style={{ paddingLeft: '10px', paddingTop: '9px' }}>Ali Hassan</h5>
+            <h5 style={{ paddingLeft: '10px', paddingTop: '9px' }}>Anonymous</h5>
             <p style={{ paddingLeft: "130px", paddingTop: "5px", cursor: "pointer" }} onClick={toggleCanvas}><i className="fa-solid fa-bars-staggered" style={{ cursor: "pointer" }}></i></p>
           </Offcanvas.Title>
         </Offcanvas.Header>
