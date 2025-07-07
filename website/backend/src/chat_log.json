@@ -26,3 +26,12 @@
 {"timestamp": "2025-05-27T09:25:46.927963", "persona": "oversharer", "user_id": "user123", "user_message": "no", "llm_reply": "It can be overwhelming to share such big news all at once. Would you like to talk more about what's going on and how you're feeling?"}
 {"timestamp": "2025-06-17T20:18:35.079597", "persona": "oversharer", "user_id": "user123", "user_message": "hello i am very sad today my wife is death today", "llm_reply": " I'm truly sorry for your loss. It's okay to feel sad and overwhelmed right now. Let's talk if you need someone to listen."}
 {"timestamp": "2025-06-17T20:23:00.846750", "persona": "oversharer", "user_id": "user123", "user_message": "hello i am very sad today someone in my street is dead", "llm_reply": " I'm really sorry to hear that. It's okay to feel sad about this. If you need someone to talk to, I'm here for you."}
+{"timestamp": "2025-07-07T14:14:08.764471", "persona": "reserved", "user_id": "user123", "user_message": "hy", "llm_reply": ""}
+{"timestamp": "2025-07-07T14:14:28.376299", "persona": "oversharer", "user_id": "user123", "user_message": "hy", "llm_reply": ""}
+{"timestamp": "2025-07-07T14:14:45.354204", "persona": "reserved", "user_id": "user123", "user_message": "hy", "llm_reply": ""}
+{"timestamp": "2025-07-07T14:16:46.125351", "persona": "reserved", "user_id": "user123", "user_message": "hello", "llm_reply": ""}
+{"timestamp": "2025-07-07T14:17:53.946348", "persona": "reserved", "user_id": "user123", "user_message": "hello", "llm_reply": "Hi there! \ud83c\udf1f"}
+{"timestamp": "2025-07-07T14:19:00.665051", "persona": "reserved", "user_id": "user123", "user_message": "hy there", "llm_reply": "\ud83c\udf1f Hello again! \u2728"}
+{"timestamp": "2025-07-07T14:22:35.688494", "persona": "reserved", "user_id": "user123", "user_message": "hy", "llm_reply": "\ud83c\udf1f See you around! \ud83d\ude04"}
+{"timestamp": "2025-07-07T14:27:28.280753", "persona": "reserved", "user_id": "user123", "user_message": "hy", "llm_reply": "\ud83c\udf1f Talk soon! \ud83d\ude0a"}
+{"timestamp": "2025-07-07T14:29:39.560518", "persona": "oversharer", "user_id": "user123", "user_message": "hello i am sad", "llm_reply": " I'm really sorry to hear that you're sad. It's okay to feel this way sometimes. Let's see if we can find a way to make things better for you, alright? \ud83d\udc9a\ud83e\udd17"}

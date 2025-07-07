@@ -4,63 +4,79 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Accordion from 'react-bootstrap/Accordion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
-
-
-
 function Home() {
   const [show, setShow] = useState(true);
   const [input, setInput] = useState('');
   const [chat, setChat] = useState([]); // [{ type: 'user' | 'bot', message, time }]
   const messagesEndRef = useRef(null);
-
   const toggleCanvas = () => setShow(!show);
+const [isTyping, setIsTyping] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+const TypingIndicator = () => (
+  <div className="typing-indicator">
+    <span className="dot"></span>
+    <span className="dot"></span>
+    <span className="dot"></span>
+  </div>
+);
 
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const userMessage = input;
-    setInput('');
 
-    setChat(prev => [...prev, { type: 'user', message: userMessage, time: now }]);
 
-    try {
-      const res = await fetch('http://127.0.0.1:8000/chat', {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: userMessage }),
-      });
 
-      const data = await res.json();
-      const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!input.trim()) return;
 
-      setChat(prev => [...prev, { type: 'bot', message: data.response || 'No response', time: botTime }]);
-    } catch (err) {
-      const errTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setChat(prev => [...prev, { type: 'bot', message: 'Error sending message', time: errTime }]);
-    }
-  };
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const userMessage = input;
+  setInput('');
+  setChat(prev => [...prev, { type: 'user', message: userMessage, time: now }]);
+
+  // 👉 Show "typing..."
+  setIsTyping(true);
+
+  try {
+    const res = await fetch('http://127.0.0.1:8000/chat', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: userMessage }),
+    });
+
+    const data = await res.json();
+    const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // ✅ Hide "typing..."
+    setIsTyping(false);
+
+    setChat(prev => [...prev, { type: 'bot', message: data.response || 'No response', time: botTime }]);
+  } catch (err) {
+    const errTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setIsTyping(false);
+    setChat(prev => [...prev, { type: 'bot', message: 'Error sending message', time: errTime }]);
+  }
+};
+
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chat]);
-
   const [history, setHistory] = useState([]);
 
+
   useEffect(() => {
-    fetch("http://localhost:8000/chat/history?user_id=user123&limit=5")
+    fetch("http://127.0.0.1:8000/chat/history?user_id=user123&limit=5")
       .then((res) => res.json())
       .then((data) => setHistory(data.history || []));
   }, []);
-
   const [personaData, setPersonaData] = useState([]);
 
+
   useEffect(() => {
-    fetch("http://localhost:8000/persona-counts")
+    fetch("http://127.0.0.1:8000/persona-counts")
       .then((res) => res.json())
       .then((data) => {
         const formatted = Object.entries(data).map(([name, value]) => ({
@@ -77,17 +93,17 @@ function Home() {
     { feature: 'Model Size', value: 4.1 },
     { feature: 'Locality', value: 10 },
   ];
-
   const [activeKey, setActiveKey] = useState("0");
   const handleToggle = (key) => {
-  if (activeKey === key) {
-    // If the same item is clicked (to close), switch to the other
-    setActiveKey(key === "0" ? "1" : "0");
-  } else {
-    setActiveKey(key); // Open new item
-  }
-};
+    if (activeKey === key) {
+      // If the same item is clicked (to close), switch to the other
+      setActiveKey(key === "0" ? "1" : "0");
+    } else {
+      setActiveKey(key); // Open new item
+    }
+  };
 
+  
 
   return (
     <div className="d-flex">
@@ -112,7 +128,6 @@ function Home() {
           </Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
-
           <Accordion defaultActiveKey="0" flush className="custom-accordion">
             <Accordion.Item eventKey="0">
               <Accordion.Header>🤖 Model Capabilities</Accordion.Header>
@@ -129,48 +144,43 @@ function Home() {
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>
-
-
-
           <Accordion activeKey={activeKey} flush className="custom-accordion">
-    <Accordion.Item eventKey="0" style={{ position: "fixed", bottom: "60px", width: "300px" }}>
-      <Accordion.Header onClick={() => handleToggle("0")}>Persona Distribution</Accordion.Header>
-      <Accordion.Body>
-        {personaData.length === 0 ? (
-          <p>No data yet.</p>
-        ) : (
-          <ResponsiveContainer style={{ marginLeft: "-50px" }} width="120%" height={200}>
-            <BarChart data={personaData}>
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </Accordion.Body>
-    </Accordion.Item>
-
-    <Accordion.Item eventKey="1" style={{ position: "fixed", bottom: "0px", width: "300px" }}>
-      <Accordion.Header onClick={() => handleToggle("1")}>🧠 Conversation Insights</Accordion.Header>
-      <Accordion.Body style={{minHeight:"300px"}}>
-        {history.length === 0 ? (
-          <p>No history yet.</p>
-        ) : (
-          history.map((entry, index) => (
-            <div key={index} className="mb-3">
-              <div><strong>You:</strong> {entry.message}</div>
-              <div><strong>Bot:</strong> {entry.response}</div>
-              <hr />
-            </div>
-          ))
-        )}
-      </Accordion.Body>
-    </Accordion.Item>
-  </Accordion>
+            <Accordion.Item eventKey="0" style={{ position: "fixed", bottom: "60px", width: "300px" }}>
+              <Accordion.Header onClick={() => handleToggle("0")}>Persona Distribution</Accordion.Header>
+              <Accordion.Body>
+                {personaData.length === 0 ? (
+                  <p>No data yet.</p>
+                ) : (
+                  <ResponsiveContainer style={{ marginLeft: "-50px" }} width="120%" height={200}>
+                    <BarChart data={personaData}>
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="1" style={{ position: "fixed", bottom: "0px", width: "300px" }}>
+              <Accordion.Header onClick={() => handleToggle("1")}>🧠 Conversation Insights</Accordion.Header>
+              <Accordion.Body style={{ minHeight: "300px" }}>
+                {history.length === 0 ? (
+                  <p>No history yet.</p>
+                ) : (
+                  history.map((entry, index) => (
+                    <div key={index} className="mb-3">
+                      <div><strong>You:</strong> {entry.message}</div>
+                      <div><strong>Bot:</strong> {entry.response}</div>
+                      <hr />
+                    </div>
+                  ))
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
         </Offcanvas.Body>
       </Offcanvas>
-
       {/* Main Content */}
       <div
         className="flex-grow-1 d-flex flex-column"
@@ -196,7 +206,6 @@ function Home() {
             </h3>
             <i className="fa-solid fa-ellipsis-vertical" style={{ position: 'fixed', right: '20px', top: '20px' }}></i>
           </div>
-
           {!show && (
             <Button
               onClick={toggleCanvas}
@@ -207,7 +216,6 @@ function Home() {
               <i className="fa-solid fa-bars-staggered"></i>
             </Button>
           )}
-
           {/* Messages */}
           {chat.map((msg, idx) => (
             <div
@@ -227,7 +235,6 @@ function Home() {
                     alt=""
                   />
                 </div>
-
                 <Card
                   bg={msg.type === 'user' ? '' : 'light'}
                   text={msg.type === 'user' ? 'white' : 'dark'}
@@ -248,9 +255,41 @@ function Home() {
               </div>
             </div>
           ))}
+
+{/* 👇 Typing indicator */}
+{isTyping && (
+  <div className="d-flex ms-2 mb-3 justify-content-start">
+    <div className="d-flex align-items-start">
+      <div className="main-4">
+        <img
+          src="./logo1.png"
+          className="main-4"
+          alt=""
+        />
+      </div>
+      <Card
+        bg="light"
+        text="dark"
+        className="p-2 me-2 main-5 from-bot"
+        style={{
+          borderRadius: "10px",
+          maxWidth: '75%',
+          backgroundColor: '#f0f0f0',
+          border: 'none',
+        }}
+      >
+        <Card.Text className="mb-0">
+  <TypingIndicator />
+</Card.Text>
+
+
+      </Card>
+    </div>
+  </div>
+)}
+
           <div ref={messagesEndRef} />
         </div>
-
         {/* Input Area */}
         <div className="mb-3 pe-4 ps-4" style={{ backgroundColor: 'transparent' }}>
           <Form onSubmit={handleSubmit}>
@@ -293,5 +332,4 @@ function Home() {
     </div>
   );
 }
-
 export default Home;
