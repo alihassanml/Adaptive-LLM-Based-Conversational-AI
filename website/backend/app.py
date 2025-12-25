@@ -26,11 +26,11 @@ app.add_middleware(
 )
 allow_origins=["*"]
 
-# llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
+llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="llama3.2:latest")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
-llm = Ollama(model="gemma3:270m")  # or "llama2", "vicuna", etc.
+# llm = Ollama(model="gemma3:270m")  # or "llama2", "vicuna", etc.
 
 
 class ChatInput(BaseModel):
