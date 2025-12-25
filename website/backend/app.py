@@ -274,3 +274,54 @@ async def delete_file(filename: str):
             return {"status": "error", "message": "File not found"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+    
+
+from evaluation.model_comparison import ModelBenchmark
+@app.get("/benchmarks")
+def get_benchmarks():
+    benchmark = ModelBenchmark()
+    
+    test_queries = [
+        "Hello, how are you?",
+        "I'm feeling really stressed about work today...",
+        "What's the weather?",
+    ]
+    
+    test_personas = [
+        {"message": "I can't stop crying, everything is falling apart...", "expected": "oversharer"},
+        {"message": "Okay.", "expected": "reserved"},
+        {"message": "Today I went to the store, bought groceries, came home...", "expected": "verbose"},
+    ]
+    
+    return {
+        "response_times": benchmark.benchmark_response_time(test_queries),
+        "persona_accuracy": benchmark.benchmark_persona_accuracy(test_personas)
+    }
+
+
+
+
+import time
+from collections import defaultdict
+
+metrics = defaultdict(list)
+
+@app.middleware("http")
+async def track_performance(request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    metrics["response_times"].append(process_time)
+    metrics["endpoint_hits"][request.url.path] += 1
+    
+    return response
+
+@app.get("/metrics")
+def get_metrics():
+    return {
+        "avg_response_time": sum(metrics["response_times"]) / len(metrics["response_times"]),
+        "total_requests": len(metrics["response_times"]),
+        "endpoint_hits": dict(metrics["endpoint_hits"]),
+        "model": "mistral:7b"
+    }

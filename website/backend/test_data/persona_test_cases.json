@@ -1,0 +1,19 @@
+
+[
+    {
+        "message": "I feel like I'm drowning in responsibilities and nobody understands me",
+        "expected_persona": "oversharer",
+        "expected_style": "supportive, empathetic, 2-3 sentences"
+    },
+    {
+        "message": "Today I started my morning with a cup of coffee, then I read the news for about 30 minutes, after which I checked my emails and responded to several important messages from colleagues...",
+        "expected_persona": "verbose",
+        "expected_style": "detailed, structured response"
+    },
+    {
+        "message": "Yes",
+        "expected_persona": "reserved",
+        "expected_style": "brief, minimal words"
+    }
+    
+]
