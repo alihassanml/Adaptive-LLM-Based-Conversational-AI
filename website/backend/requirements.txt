@@ -12,3 +12,8 @@ httpx
 python-dotenv
 faiss-cpu 
 sentence-transformers
+langchain_community
+sentence-transformers
+PyPDF2
+python-docx
+python-multipart
