@@ -7,7 +7,7 @@ class ModelBenchmark:
     def __init__(self):
         self.models = {
             "gemma3:270m": Ollama(model="gemma3:270m"),
-            "mistral:7b": Ollama(model="gemma3:270m")
+            "mistral:7b": Ollama(model="mistral:latest")
         }
     
     def classify_with_model(self, model, message: str) -> str:
