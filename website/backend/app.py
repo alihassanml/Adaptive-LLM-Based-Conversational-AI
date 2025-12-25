@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, File, UploadFile
 from src.rag_handler import rag_handler
+import time
+from collections import defaultdict
 import shutil
 import os
 
@@ -301,10 +303,10 @@ def get_benchmarks():
 
 
 
-import time
-from collections import defaultdict
-
-metrics = defaultdict(list)
+metrics = {
+    "response_times": [],
+    "endpoint_hits": defaultdict(int)  # ✅ Use defaultdict(int) for counters
+}
 
 @app.middleware("http")
 async def track_performance(request, call_next):
@@ -313,15 +315,24 @@ async def track_performance(request, call_next):
     process_time = time.time() - start_time
     
     metrics["response_times"].append(process_time)
-    metrics["endpoint_hits"][request.url.path] += 1
+    metrics["endpoint_hits"][request.url.path] += 1  # ✅ Now works correctly
     
     return response
+    
 
 @app.get("/metrics")
 def get_metrics():
+    if not metrics["response_times"]:
+        return {
+            "avg_response_time": 0,
+            "total_requests": 0,
+            "endpoint_hits": {},
+            "model": "mistral:latest"
+        }
+    
     return {
         "avg_response_time": sum(metrics["response_times"]) / len(metrics["response_times"]),
         "total_requests": len(metrics["response_times"]),
-        "endpoint_hits": dict(metrics["endpoint_hits"]),
-        "model": "mistral:7b"
+        "endpoint_hits": dict(metrics["endpoint_hits"]),  # Convert defaultdict to dict
+        "model": "mistral:latest"
     }
