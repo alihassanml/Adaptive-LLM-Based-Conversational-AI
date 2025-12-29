@@ -28,15 +28,16 @@ app.add_middleware(
 )
 allow_origins=["*"]
 
-llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
+# llm = Ollama(model="mistral:latest")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="llama3.2:latest")  # or "llama2", "vicuna", etc.
-# llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
+llm = Ollama(model="gemma3:1b")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="gemma3:4b")  # or "llama2", "vicuna", etc.
 # llm = Ollama(model="gemma3:270m")  # or "llama2", "vicuna", etc.
 
 
 class ChatInput(BaseModel):
     message: str
+    session_id: str = "user123"  # Default for backward compatibility
 
 CHAT_LOG = './src/chat_log.json'
 
@@ -108,7 +109,7 @@ async def chat(input: ChatInput):
 
     persona_description = PERSONAS[persona]
 
-    user_history = load_recent_history("user123", limit=4)
+    user_history = load_recent_history(input.session_id, limit=4)
     # RAG retrieval
     # RAG retrieval with error handling
     rag_context = ""
@@ -135,7 +136,7 @@ async def chat(input: ChatInput):
 
     response = llm.invoke(response_prompt)
 
-    save_chat_log(persona, input.message, response)
+    save_chat_log(persona, input.message, response, user_id=input.session_id)
 
     return {
         "persona_detected": persona,
@@ -148,14 +149,14 @@ async def chat(input: ChatInput):
 
 
 @app.get("/chat/history")
-def get_chat_history(user_id: str = "user123", limit: int = 10):
+def get_chat_history(session_id: str = "user123", limit: int = 10):
     history = []
     try:
         with open(CHAT_LOG, "r") as f:
             lines = f.readlines()
             for line in reversed(lines):
                 entry = json.loads(line)
-                if entry.get("user_id", "user123") == user_id:
+                if entry.get("user_id", "user123") == session_id:
                     history.append({
                         "timestamp": entry["timestamp"],
                         "message": entry["user_message"],
@@ -171,16 +172,19 @@ def get_chat_history(user_id: str = "user123", limit: int = 10):
 from collections import Counter
 import json
 
+
 @app.get("/persona-counts")
-def get_persona_counts():
+def get_persona_counts(session_id: str = "user123"):
     counts = Counter()
     try:
         with open(CHAT_LOG, "r") as f:
             for line in f:
                 entry = json.loads(line)
-                persona = entry.get("persona")
-                if persona:
-                    counts[persona] += 1
+                # Only count personas for the specified session_id
+                if entry.get("user_id", "user123") == session_id:
+                    persona = entry.get("persona")
+                    if persona:
+                        counts[persona] += 1
     except FileNotFoundError:
         pass
     return counts

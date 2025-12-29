@@ -14,6 +14,7 @@ function Home() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [sessionId, setSessionId] = useState('');
 
   const TypingIndicator = () => (
     <div className="typing-indicator">
@@ -23,8 +24,44 @@ function Home() {
     </div>
   );
 
+  // Generate or retrieve session ID from sessionStorage
+  useEffect(() => {
+    // Check if session ID already exists in sessionStorage
+    let storedSessionId = sessionStorage.getItem('chatSessionId');
 
+    if (!storedSessionId) {
+      // Generate new session ID if none exists
+      storedSessionId = crypto.randomUUID();
+      sessionStorage.setItem('chatSessionId', storedSessionId);
+      console.log('New session ID generated:', storedSessionId);
+    } else {
+      console.log('Existing session ID retrieved:', storedSessionId);
+    }
 
+    setSessionId(storedSessionId);
+  }, []);
+
+  // Function to fetch chat history
+  const fetchHistory = () => {
+    if (!sessionId) return;
+    fetch(`http://127.0.0.1:8000/chat/history?session_id=${sessionId}&limit=5`)
+      .then((res) => res.json())
+      .then((data) => setHistory(data.history || []));
+  };
+
+  // Function to fetch persona counts
+  const fetchPersonaCounts = () => {
+    if (!sessionId) return;
+    fetch(`http://127.0.0.1:8000/persona-counts?session_id=${sessionId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const formatted = Object.entries(data).map(([name, value]) => ({
+          name,
+          count: value,
+        }));
+        setPersonaData(formatted);
+      });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +82,7 @@ function Home() {
           accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({ message: userMessage, session_id: sessionId }),
       });
 
       const data = await res.json();
@@ -62,6 +99,10 @@ function Home() {
         ragUsed: data.rag_used,  // Add this
         ragSources: data.rag_sources
       }]);
+
+      // ✅ Refresh history and persona counts after message
+      fetchHistory();
+      fetchPersonaCounts();
     } catch (err) {
       const errTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setIsTyping(false);
@@ -77,11 +118,10 @@ function Home() {
   const [history, setHistory] = useState([]);
 
 
+  // Fetch history when sessionId changes
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/chat/history?user_id=user123&limit=5")
-      .then((res) => res.json())
-      .then((data) => setHistory(data.history || []));
-  }, []);
+    fetchHistory();
+  }, [sessionId]);
   const [personaData, setPersonaData] = useState([]);
 
 
@@ -97,17 +137,10 @@ function Home() {
       .catch((err) => console.error("Failed to fetch uploaded files:", err));
   }, []);
 
+  // Fetch persona counts when sessionId changes
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/persona-counts")
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = Object.entries(data).map(([name, value]) => ({
-          name,
-          count: value,
-        }));
-        setPersonaData(formatted);
-      });
-  }, []);
+    fetchPersonaCounts();
+  }, [sessionId]);
   const modelStats = [
     { feature: 'Context Memory', value: 7 },
     { feature: 'Adaptivity', value: 9 },
